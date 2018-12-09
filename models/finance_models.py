@@ -4,29 +4,31 @@ import torch.nn as nn
 
 
 class FinanceModel(nn.Module):
-    def __init__(self, input_dim, output_dim=1):
-        super(CollabModelTwo, self).__init__()
-        dropout_p = 0.1
-        h1 = 1000
-        h2 = 500
-        self.linear1 = nn.Linear(input_dim, h1)
-        self.relu1 = nn.ReLU()
-        self.bn1 = nn.BatchNorm1d(h1)
-        self.dropout1 = nn.AlphaDropout(p=dropout_p)
-        self.linear2 = nn.Linear(h1, h2)
-        self.relu2 = nn.ReLU()
-        self.bn2 = nn.BatchNorm1d(h2)
-        self.dropout2 = nn.AlphaDropout(p=dropout_p)
-        self.out = nn.Linear(h2, output_dim)
+    def __init__(self, input_dim, output_dim=1, dropout_p=0.1, binary=False):
+        super(FinanceModel, self).__init__()
+        
+        norm_layer = nn.BatchNorm1d
+        
+        hidden_units = [1000, 2000, 500, 200]
+        sequence = [
+            nn.Linear(input_dim, hidden_units[0]),
+            nn.LeakyReLU(0.2, True),
+            norm_layer(hidden_units[0]),
+            nn.AlphaDropout(p=dropout_p)
+        ]
+        
+        for n in range(1, len(hidden_units)):
+            sequence += [
+                nn.Linear(hidden_units[n-1], hidden_units[n]),
+                norm_layer(hidden_units[n]),
+                nn.LeakyReLU(0.2, True),
+                nn.AlphaDropout(p=dropout_p)
+            ]
+        sequence += [nn.Linear(hidden_units[-1], output_dim)]
+        
+        if binary:
+            sequence += [nn.Sigmoid()]
+        self.model = nn.Sequential(*sequence)
 
     def forward(self, x):
-        x = self.linear1(x)
-        x = self.relu1(x)
-        x = self.bn1(x)
-#         x = self.dropout1(x)
-        x = self.linear2(x)
-        x = self.relu2(x)
-        x = self.bn2(x)
-#         x = self.dropout2(x)
-        out = self.out(x)
-        return out
+        return self.model(x)
