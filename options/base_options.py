@@ -43,4 +43,7 @@ def get_options():
         help="if True, weight predictions with confidence")
     parser.add_argument("--max_interval", type=int, default=7,
         help="number of days to look back for news data")
+    parser.add_argument("--conf_coef", type=int, default=1,
+            help="coefficient on confidence loss")
+    
     return parser.parse_args()
