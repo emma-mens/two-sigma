@@ -15,7 +15,7 @@ if __name__ == "__main__":
     
     args = options.get_options()
     
-    output_dim = 1 if not args.confidence else 2
+    output_dim = 1
     
     if args.type == 'test':
         test_loader = DataLoader(FinanceDataset(args.data_file, args.augmented_data,

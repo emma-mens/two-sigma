@@ -92,15 +92,11 @@ def train(model, train_loader, test_loader, args):
             output = model(input)
 
             loss = get_loss(output, label, criterion, args)
-            if args.confidence:
-                loss, pred_loss = loss
 
             loss.backward()
             optimizer.step()
 
             # record loss
-            if args.confidence:
-                loss = pred_loss # only display part of loss that's actual prediction
             loss_meter.update(loss.item(), input.shape[0])
             batch_time.update(time.time() - end_time)
 
@@ -170,8 +166,6 @@ def validate(model, val_loader, args):
             output = output.detach()
 
             loss = get_loss(output, label, criterion, args)
-            if args.confidence:
-                loss = loss[1]
 
             batch_time.update(time.time() - end)
             end = time.time()
@@ -202,7 +196,5 @@ def get_criterion(args):
 def get_loss(output, label, criterion, args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if args.confidence:
-        pred_loss = criterion(output[:,0]*output[:,1], label.view(-1)*output[:,1].detach()) 
-        loss = args.conf_coef*nn.MSELoss()(output[:,1], torch.ones(output.shape[0]).to(device)) + pred_loss
-        return loss, pred_loss
+        return -0.001*(output*label).mean()
     return criterion(output, label)
